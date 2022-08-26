@@ -1,0 +1,93 @@
+#spring:
+#  cloud:
+#    vault:
+#      host: 192.168.1.15
+#      port: 8200
+#      token: vault-plaintext-root-token
+#      database:
+#        enabled: true
+#        role: time_management_role
+#        username-property: spring.r2dbc.username
+#        password-property: spring.r2dbc.password
+#      scheme: http
+#    consul:
+#      host: 192.168.1.15
+#      port: 8500
+#      enabled: true
+#      config:
+#        enabled: true
+#        format: yaml
+#        data-key: data
+#      discovery:
+#        scheme: http
+#        acl-token: 61299636-4113-f221-f093-a575e7c4ceac
+#        instance-id: ${spring.application.name}
+#        prefer-ip-address: true
+#  data:
+#    mongodb:
+#      host: 127.0.0.1
+#      port: 27108
+#      database: schedule
+#  security:
+#    oauth2:
+#      resourceserver:
+#        opaquetoken:
+#          client-id: schedule-service
+#          client-secret:
+#          introspection-uri: http://192.168.1.15:8080/auth/realms/kbtu_project/protocol/openid-connect/token/introspect
+#  application:
+#    name: schedule-service
+#axon:
+#  axonserver:
+#    client-id: ${spring.application.name}
+#    servers: 192.168.1.217:8124
+#    component-name: ${spring.application.name}
+#  serializer:
+#    general: jackson
+#server:
+#  port: 0
+server:
+  port: 0
+spring:
+  cloud:
+    consul:
+      enabled: false
+      discovery:
+        enabled: false
+    vault:
+      enabled: false
+  data:
+    mongodb:
+      username: admin
+      password: admin
+      host: localhost
+      port: 27017
+      database: test
+  application:
+    name: schedule-service
+  rsocket:
+    server:
+      port: 7000
+
+axon:
+  axonserver:
+    client-id: ${spring.application.name}
+    servers: localhost:8124
+    component-name: ${spring.application.name}
+  kafka:
+    bootstrap-servers: 192.168.1.71:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
+      event-processor-mode: subscribing
+    consumer:
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      key-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
+      event-processor-mode: subscribing
+
+zeebe:
+  client:
+    broker:
+      gateway-address: localhost:26500
+    security:
+      plaintext: true

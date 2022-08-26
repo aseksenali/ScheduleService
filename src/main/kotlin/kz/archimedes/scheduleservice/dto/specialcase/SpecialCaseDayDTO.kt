@@ -1,0 +1,3 @@
+package kz.archimedes.scheduleservice.dto.specialcase
+
+sealed interface SpecialCaseDayDTO
