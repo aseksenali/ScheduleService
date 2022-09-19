@@ -7,7 +7,6 @@ import kz.archimedes.scheduleservice.exception.DatabaseRecordNotFoundException
 import kz.archimedes.scheduleservice.model.query.HolidayEntity
 import kz.archimedes.scheduleservice.model.query.ScheduleHistoryEntity
 import kz.archimedes.scheduleservice.model.query.SpecialCaseDayEntity
-import kz.archimedes.scheduleservice.model.query.WorkingDaysEntity
 import kz.archimedes.scheduleservice.model.util.OperationType
 import kz.archimedes.scheduleservice.model.util.WorkingHours
 import kz.archimedes.scheduleservice.repository.ScheduleHistoryRepository
@@ -29,9 +28,18 @@ class ScheduleHistoryProjection(
     @EventHandler
     fun on(event: ScheduleCreatedEvent) {
         val entity = ScheduleHistoryEntity(
-            UUID.randomUUID(), event.medicId, event.startDate, event.endDate, listOf(), listOf(), WorkingDaysEntity(
-                event.branchId, event.workingSchedule
-            ), OperationType.CREATE
+            UUID.randomUUID(),
+            event.medicId,
+            event.branchId,
+            event.startDate,
+            event.endDate,
+            listOf(),
+            listOf(),
+            listOf(),
+            event.workingScheduleVisit,
+            event.workingScheduleOutgoing,
+            event.workingScheduleOnline,
+            OperationType.CREATE
         ).also { it.markNew() }
         runBlocking {
             scheduleRepository.save(entity)
@@ -48,7 +56,7 @@ class ScheduleHistoryProjection(
                 ?: throw DatabaseRecordNotFoundException
             val updatedSchedule = schedule.copy(
                 id = UUID.randomUUID(),
-                holidays = schedule.holidays + HolidayEntity(event.branchId, event.startDate, event.endDate),
+                holidays = schedule.holidays + HolidayEntity(event.startDate, event.endDate),
                 operationType = OperationType.UPDATE
             ).also { it.markNew() }
             scheduleRepository.save(updatedSchedule)
@@ -65,7 +73,7 @@ class ScheduleHistoryProjection(
                 ?: throw DatabaseRecordNotFoundException
             val updatedSchedule = schedule.copy(
                 id = UUID.randomUUID(),
-                holidays = schedule.holidays - HolidayEntity(event.branchId, event.startDate, event.endDate),
+                holidays = schedule.holidays - HolidayEntity(event.startDate, event.endDate),
                 operationType = OperationType.UPDATE
             ).also { it.markNew() }
             scheduleRepository.save(updatedSchedule)
@@ -97,7 +105,6 @@ class ScheduleHistoryProjection(
             val updatedSchedule = schedule.copy(
                 id = UUID.randomUUID(),
                 specialCaseDays = schedule.specialCaseDays + SpecialCaseDayEntity(
-                    event.branchId,
                     event.date,
                     event.workingHours
                 ),
@@ -117,7 +124,6 @@ class ScheduleHistoryProjection(
             val updatedSchedule = schedule.copy(
                 id = UUID.randomUUID(),
                 specialCaseDays = schedule.specialCaseDays - SpecialCaseDayEntity(
-                    event.branchId,
                     event.date,
                     WorkingHours(event.startTime, event.endTime)
                 ),

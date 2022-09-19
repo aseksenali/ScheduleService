@@ -58,11 +58,7 @@ spring:
       enabled: false
   data:
     mongodb:
-      username: admin
-      password: admin
-      host: localhost
-      port: 27017
-      database: test
+      uri: mongodb+srv://admin:admin@archimedes.a4evvce.mongodb.net/test?retryWrites=true&w=majority
   application:
     name: schedule-service
   rsocket:
@@ -72,10 +68,10 @@ spring:
 axon:
   axonserver:
     client-id: ${spring.application.name}
-    servers: localhost:8124
+    servers: 192.168.1.73:8124
     component-name: ${spring.application.name}
   kafka:
-    bootstrap-servers: 192.168.1.71:9092
+    bootstrap-servers: pkc-ldvr1.asia-southeast1.gcp.confluent.cloud:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
@@ -84,10 +80,15 @@ axon:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       key-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
       event-processor-mode: subscribing
-
+    properties:
+      security.protocol: SASL_SSL
+      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username='TJ2Y4LDHSXNLTLD7' password='gOOw1cQEtjjAFCejKpxG34diaU52KB/iVzR5QAGGRpdqkbWTSYDivCt+iwj0xBXt';
+      sasl.mechanism: PLAIN
+      session.timeout.ms: 45000
+      acks: all
 zeebe:
   client:
     broker:
-      gateway-address: localhost:26500
+      gateway-address: 192.168.1.73:26500
     security:
       plaintext: true

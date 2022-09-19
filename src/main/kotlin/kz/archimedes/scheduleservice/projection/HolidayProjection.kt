@@ -28,7 +28,7 @@ class HolidayProjection(
         runBlocking {
             val schedule = scheduleRepository.findById(event.medicId) ?: throw DatabaseRecordNotFoundException
             val updatedSchedule = schedule.copy(
-                holidays = schedule.holidays - HolidayEntity(event.branchId, event.startDate, event.endDate)
+                holidays = schedule.holidays - HolidayEntity(event.startDate, event.endDate)
             )
             scheduleRepository.save(updatedSchedule)
             queryUpdateEmitter.emit<FindScheduleQuery, ScheduleEntity>(updatedSchedule) {
@@ -45,7 +45,7 @@ class HolidayProjection(
         runBlocking {
             val schedule = scheduleRepository.findById(event.medicId) ?: throw DatabaseRecordNotFoundException
             val updatedSchedule = schedule.copy(
-                holidays = schedule.holidays + HolidayEntity(event.branchId, event.startDate, event.endDate)
+                holidays = schedule.holidays + HolidayEntity(event.startDate, event.endDate)
             )
             scheduleRepository.save(updatedSchedule)
             queryUpdateEmitter.emit<FindScheduleQuery, ScheduleEntity>(updatedSchedule) {

@@ -2,10 +2,8 @@ package kz.archimedes.scheduleservice.model.util
 
 import java.time.DayOfWeek
 import java.time.DayOfWeek.*
-import java.util.*
 
-data class DaySchedule(
-    val specialtyId: UUID,
+data class WeekSchedule(
     val days: Map<DayOfWeek, List<WorkingHours>> = mapOf(
         MONDAY to listOf(),
         TUESDAY to listOf(),

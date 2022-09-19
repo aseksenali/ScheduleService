@@ -9,7 +9,6 @@ import kz.archimedes.api.query.FindScheduleAfterRelocationQuery
 import kz.archimedes.api.query.FindScheduleQuery
 import kz.archimedes.scheduleservice.exception.DatabaseRecordNotFoundException
 import kz.archimedes.scheduleservice.model.query.ScheduleEntity
-import kz.archimedes.scheduleservice.model.query.WorkingDaysEntity
 import kz.archimedes.scheduleservice.repository.ScheduleEntityRepository
 import org.axonframework.eventhandling.EventHandler
 import org.axonframework.extensions.kotlin.emit
@@ -27,9 +26,16 @@ class ScheduleProjection(
     @EventHandler
     fun on(event: ScheduleCreatedEvent) {
         val entity = ScheduleEntity(
-            event.medicId, event.startDate, event.endDate, listOf(), listOf(), WorkingDaysEntity(
-                event.branchId, event.workingSchedule
-            )
+            event.medicId,
+            event.branchId,
+            event.startDate,
+            event.endDate,
+            listOf(),
+            listOf(),
+            listOf(),
+            event.workingScheduleVisit,
+            event.workingScheduleOutgoing,
+            event.workingScheduleOnline
         ).also { it.markNew() }
         runBlocking {
             scheduleRepository.save(entity)

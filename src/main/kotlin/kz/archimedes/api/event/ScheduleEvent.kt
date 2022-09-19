@@ -1,6 +1,6 @@
 package kz.archimedes.api.event
 
-import kz.archimedes.scheduleservice.model.util.DaySchedule
+import kz.archimedes.scheduleservice.model.util.WeekSchedule
 import java.time.LocalDate
 import java.util.*
 
@@ -14,10 +14,12 @@ data class DeletionDateRemovedEvent(val medicId: UUID) : ScheduleEvent
 data class ScheduleCreatedEvent(
     val medicId: UUID,
     val branchId: UUID,
-    val specialtyId: UUID,
+    val minimalAppointmentPeriod: Int,
     val startDate: LocalDate,
     val endDate: LocalDate?,
-    val workingSchedule: List<DaySchedule>
+    val workingScheduleVisit: WeekSchedule?,
+    val workingScheduleOutgoing: WeekSchedule?,
+    val workingScheduleOnline: WeekSchedule?,
 ) : ScheduleEvent
 
 data class ScheduleDeletedEvent(val medicId: UUID) : ScheduleEvent

@@ -45,10 +45,12 @@ class ScheduleHandler(
         val command = CreateScheduleCommand(
             requestData.medicId,
             requestData.branchId,
-            requestData.specialtyId,
+            requestData.minimalAppointmentPeriod,
             requestData.startDate,
             requestData.endDate,
-            requestData.workingSchedule
+            requestData.workingScheduleVisit,
+            requestData.workingScheduleOutgoing,
+            requestData.workingScheduleOnline
         )
         val subscriptionQuery = queryGateway.subscriptionQuery(
             FindScheduleQuery(requestData.medicId),
@@ -120,7 +122,7 @@ class ScheduleHandler(
             ?: throw ValidationException("Request is incorrect")
         val command = CreateRelocationCommand(
             medicId,
-            requestData.toBranch,
+            requestData.branchId,
             requestData.startDate,
             requestData.endDate,
             requestData.workingHours

@@ -17,38 +17,34 @@ object CollectionUtils {
             is Holiday ->
                 this.filter {
                     it as Holiday
-                    it.branchId == elem.branchId
-                }.filter {
-                    it as Holiday
                     (elem.start >= it.start && elem.start <= it.end) || (elem.end >= it.start && elem.end <= it.end)
                 }
+
             is HolidayEntity ->
                 this.filter {
                     it as HolidayEntity
-                    it.branchId == elem.branchId
-                }.filter {
-                    it as HolidayEntity
                     (elem.start >= it.start && elem.start <= it.end) || (elem.end >= it.start && elem.end <= it.end)
                 }
+
             is SpecialCaseDay ->
                 this.filter {
                     it as SpecialCaseDay
-                    elem.branchId == it.branchId &&
                     elem.date == it.date
                 }.filter {
                     it as SpecialCaseDay
                     (elem.start >= it.start && elem.start <= it.end) || (elem.end >= it.start && elem.end <= it.end)
                 }
+
             is SpecialCaseDayEntity -> {
                 this.filter {
                     it as SpecialCaseDayEntity
-                    elem.branchId == it.branchId &&
-                            elem.date == it.date
+                    elem.date == it.date
                 }.filter {
                     it as SpecialCaseDayEntity
                     (elem.start >= it.start && elem.start <= it.end) || (elem.end >= it.start && elem.end <= it.end)
                 }
             }
+
             else -> throw NotSupportedOperationException
         }
     }
@@ -63,7 +59,10 @@ object CollectionUtils {
         }
     }
 
-    inline fun <T, reified U: TimeInterval<T>> U.copyChangingIntervals(newStart: T, newEnd: T): U where T: Comparable<T>, T: Temporal {
+    inline fun <T, reified U : TimeInterval<T>> U.copyChangingIntervals(
+        newStart: T,
+        newEnd: T
+    ): U where T : Comparable<T>, T : Temporal {
         return when (this) {
             is Holiday -> {
                 newStart as LocalDate
@@ -73,6 +72,7 @@ object CollectionUtils {
                     endDate = newEnd
                 ) as U
             }
+
             is HolidayEntity -> {
                 newStart as LocalDate
                 newEnd as LocalDate
@@ -81,6 +81,7 @@ object CollectionUtils {
                     endDate = newEnd
                 ) as U
             }
+
             is SpecialCaseDay -> {
                 newStart as LocalTime
                 newEnd as LocalTime
@@ -88,6 +89,7 @@ object CollectionUtils {
                     workingHours = WorkingHours(newStart, newEnd)
                 ) as U
             }
+
             is SpecialCaseDayEntity -> {
                 newStart as LocalTime
                 newEnd as LocalTime
@@ -95,11 +97,15 @@ object CollectionUtils {
                     workingHours = WorkingHours(newStart, newEnd)
                 ) as U
             }
+
             else -> throw NotSupportedOperationException
         }
     }
 
-    inline fun <T, reified U: TimeInterval<T>> U.getSurroundingIntervals(newStart: T, newEnd: T): Pair<U?, U?> where T: Comparable<T>, T: Temporal {
+    inline fun <T, reified U : TimeInterval<T>> U.getSurroundingIntervals(
+        newStart: T,
+        newEnd: T
+    ): Pair<U?, U?> where T : Comparable<T>, T : Temporal {
         return when (this) {
             is HolidayEntity -> {
                 newStart as LocalDate

@@ -3,6 +3,8 @@ package kz.archimedes.scheduleservice.model.command
 import kz.archimedes.api.command.*
 import kz.archimedes.api.event.*
 import kz.archimedes.scheduleservice.exception.ValidationException
+import kz.archimedes.scheduleservice.model.util.WeekSchedule
+import kz.archimedes.scheduleservice.model.util.WorkingHours
 import kz.archimedes.scheduleservice.util.CollectionUtils.minusAssign
 import kz.archimedes.scheduleservice.util.CollectionUtils.plusAssign
 import org.axonframework.commandhandling.CommandHandler
@@ -19,31 +21,45 @@ import org.axonframework.modelling.command.AggregateMember
 import org.axonframework.spring.stereotype.Aggregate
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.util.*
 
 @Aggregate
 class Schedule() {
     @AggregateIdentifier
     private lateinit var medicId: UUID
+    private lateinit var branchId: UUID
     private lateinit var startDate: LocalDate
     private var endDate: LocalDate? = null
+    private var minimalAppointmentPeriod: Int = 0
     private var deletionDeadlineId: ScheduleToken? = null
 
-    @AggregateMember
-    private lateinit var workingDays: WorkingDays
+    private final var specialDays: MutableList<SpecialCaseDay> = mutableListOf()
+    private final var holidays: MutableList<Holiday> = mutableListOf()
+    private final var relocations: MutableList<Relocation> = mutableListOf()
 
     @AggregateMember
-    private final val specialDays: MutableList<SpecialCaseDay> = mutableListOf()
+    private var workingScheduleVisit: WeekSchedule? = null
 
     @AggregateMember
-    private final val holidays: MutableList<Holiday> = mutableListOf()
+    private var workingScheduleOutgoing: WeekSchedule? = null
+
+    @AggregateMember
+    private var workingScheduleOnline: WeekSchedule? = null
 
     @CommandHandler
     constructor(command: CreateScheduleCommand) : this() {
         if (command.endDate?.isBefore(command.startDate) == true) throw ValidationException("Start date must be before end date")
         apply(
             ScheduleCreatedEvent(
-                command.medicId, command.branchId, command.specialtyId, command.startDate, command.endDate, command.workingSchedule
+                command.medicId,
+                command.branchId,
+                command.minimalAppointmentPeriod,
+                command.startDate,
+                command.endDate,
+                command.workingScheduleVisit,
+                command.workingScheduleOutgoing,
+                command.workingScheduleOnline
             )
         )
     }
@@ -93,7 +109,7 @@ class Schedule() {
 
     @CommandHandler
     fun on(command: CreateRelocationCommand) {
-        val currentBranch = this.workingDays.branchId
+        val currentBranch = this.branchId
         apply(HolidayCreatedEvent(command.medicId, currentBranch, command.startDate, command.endDate))
         for (date in command.startDate.datesUntil(command.endDate.plusDays(1))) {
             for (workingSchedule in command.workingSchedule.days[date.dayOfWeek] ?: listOf()) {
@@ -102,27 +118,59 @@ class Schedule() {
         }
     }
 
+    @CommandHandler
+    fun on(command: DeleteSpecialCaseDayCommand) {
+        if (command.startTime.isAfter(command.endTime))
+            throw ValidationException("Start time is after end time")
+        if (command.endTime.isBefore(command.startTime))
+            throw ValidationException("End time is before start time")
+        apply(
+            SpecialCaseDayDeletedEvent(
+                command.medicId,
+                command.branchId,
+                command.date,
+                command.startTime,
+                command.endTime
+            )
+        )
+    }
+
+    @EventSourcingHandler
+    fun handle(event: SpecialCaseDayDeletedEvent) {
+        val startTime: LocalTime = event.startTime
+        val endTime: LocalTime = event.endTime
+        specialDays.forEach {
+            val workingHours = WorkingHours(startTime, endTime)
+            if (it.workingHours == workingHours)
+                it.workingHours = workingHours
+        }
+    }
+
     @EventSourcingHandler
     fun handle(event: ScheduleCreatedEvent) {
         medicId = event.medicId
+        branchId = event.branchId
+        minimalAppointmentPeriod = event.minimalAppointmentPeriod
         startDate = event.startDate
         endDate = event.endDate
-        workingDays = WorkingDays(event.branchId, event.workingSchedule)
+        workingScheduleVisit = event.workingScheduleVisit
+        workingScheduleOutgoing = event.workingScheduleOutgoing
+        workingScheduleOnline = event.workingScheduleOnline
     }
 
     @EventSourcingHandler
     fun handle(event: SpecialCaseDayCreatedEvent) {
-        specialDays += SpecialCaseDay(event.date, event.branchId, event.workingHours)
+        specialDays += SpecialCaseDay(event.date, event.workingHours)
     }
 
     @EventSourcingHandler
     fun handle(event: HolidayCreatedEvent) {
-        holidays += Holiday(event.branchId, event.startDate, event.endDate)
+        holidays += Holiday(event.startDate, event.endDate)
     }
 
     @EventSourcingHandler
     fun handle(event: HolidayDeletedEvent) {
-        holidays -= Holiday(event.branchId, event.startDate, event.endDate)
+        holidays -= Holiday(event.startDate, event.endDate)
     }
 
     @EventSourcingHandler

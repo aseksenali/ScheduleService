@@ -27,7 +27,7 @@ class SpecialCaseDayProjection(
         runBlocking {
             val schedule = scheduleRepository.findById(event.medicId) ?: throw DatabaseRecordNotFoundException
             val updatedSchedule = schedule.copy(
-                specialCaseDays = schedule.specialCaseDays + SpecialCaseDayEntity(event.branchId, event.date, event.workingHours)
+                specialCaseDays = schedule.specialCaseDays + SpecialCaseDayEntity(event.date, event.workingHours)
             )
             scheduleRepository.save(updatedSchedule)
             queryUpdateEmitter.emit<FindScheduleQuery, ScheduleEntity>(updatedSchedule) {
@@ -44,7 +44,7 @@ class SpecialCaseDayProjection(
         runBlocking {
             val schedule = scheduleRepository.findById(event.medicId) ?: throw DatabaseRecordNotFoundException
             val updatedSchedule = schedule.copy(
-                specialCaseDays = schedule.specialCaseDays - SpecialCaseDayEntity(event.branchId, event.date, WorkingHours(event.startTime, event.endTime))
+                specialCaseDays = schedule.specialCaseDays - SpecialCaseDayEntity(event.date, WorkingHours(event.startTime, event.endTime))
             )
             scheduleRepository.save(updatedSchedule)
             queryUpdateEmitter.emit<FindScheduleQuery, ScheduleEntity>(updatedSchedule) {
